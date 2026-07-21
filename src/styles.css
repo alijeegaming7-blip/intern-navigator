@@ -1,0 +1,199 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ------------------------------------------------------------------
+ * EEF – AI Internship Roadmap
+ * Design system: "Midnight Console" — deep indigo/near-black surfaces,
+ * neon cyan + electric violet accents, monospace headings for an
+ * engineering-tool feel.
+ * ------------------------------------------------------------------ */
+
+@theme inline {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-neon: var(--neon);
+  --color-violet: var(--violet);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Dark by default — engineering console */
+  --background: oklch(0.15 0.03 265);
+  --foreground: oklch(0.97 0.01 250);
+
+  --card: oklch(0.19 0.035 265);
+  --card-foreground: oklch(0.97 0.01 250);
+
+  --popover: oklch(0.19 0.035 265);
+  --popover-foreground: oklch(0.97 0.01 250);
+
+  --primary: oklch(0.82 0.17 195); /* neon cyan */
+  --primary-foreground: oklch(0.15 0.03 265);
+
+  --secondary: oklch(0.25 0.04 265);
+  --secondary-foreground: oklch(0.97 0.01 250);
+
+  --muted: oklch(0.23 0.03 265);
+  --muted-foreground: oklch(0.7 0.03 260);
+
+  --accent: oklch(0.65 0.24 300); /* electric violet */
+  --accent-foreground: oklch(0.98 0.01 250);
+
+  --destructive: oklch(0.65 0.24 25);
+  --destructive-foreground: oklch(0.98 0.01 250);
+
+  --success: oklch(0.75 0.19 155);
+  --success-foreground: oklch(0.15 0.03 265);
+
+  --warning: oklch(0.82 0.17 75);
+  --warning-foreground: oklch(0.15 0.03 265);
+
+  --border: oklch(0.28 0.03 265);
+  --input: oklch(0.25 0.03 265);
+  --ring: oklch(0.82 0.17 195);
+
+  --neon: oklch(0.82 0.17 195);
+  --violet: oklch(0.65 0.24 300);
+
+  --chart-1: oklch(0.82 0.17 195);
+  --chart-2: oklch(0.65 0.24 300);
+  --chart-3: oklch(0.75 0.19 155);
+  --chart-4: oklch(0.82 0.17 75);
+  --chart-5: oklch(0.7 0.2 25);
+
+  --sidebar: oklch(0.17 0.03 265);
+  --sidebar-foreground: oklch(0.97 0.01 250);
+  --sidebar-primary: oklch(0.82 0.17 195);
+  --sidebar-primary-foreground: oklch(0.15 0.03 265);
+  --sidebar-accent: oklch(0.23 0.03 265);
+  --sidebar-accent-foreground: oklch(0.97 0.01 250);
+  --sidebar-border: oklch(0.28 0.03 265);
+  --sidebar-ring: oklch(0.82 0.17 195);
+
+  /* Signature gradients + shadows */
+  --gradient-hero:
+    radial-gradient(ellipse at top, oklch(0.3 0.15 280 / 0.35), transparent 60%),
+    radial-gradient(ellipse at bottom right, oklch(0.4 0.2 195 / 0.25), transparent 55%),
+    linear-gradient(180deg, oklch(0.13 0.03 265), oklch(0.15 0.03 265));
+  --gradient-primary: linear-gradient(135deg, oklch(0.82 0.17 195), oklch(0.65 0.24 300));
+  --gradient-card: linear-gradient(160deg, oklch(0.21 0.04 265) 0%, oklch(0.17 0.03 265) 100%);
+  --shadow-glow: 0 0 32px oklch(0.82 0.17 195 / 0.35);
+  --shadow-glow-violet: 0 0 40px oklch(0.65 0.24 300 / 0.35);
+  --shadow-panel: 0 20px 60px -20px oklch(0.05 0.02 265 / 0.6);
+
+  --grid-line: oklch(1 0 0 / 0.04);
+}
+
+.dark {
+  /* Same tokens — the app is dark by default */
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-attachment: fixed;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  ::selection {
+    background: oklch(0.82 0.17 195 / 0.35);
+    color: var(--color-foreground);
+  }
+}
+
+@utility surface-panel {
+  background: var(--gradient-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-panel);
+}
+
+@utility gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility hero-bg {
+  background: var(--gradient-hero);
+}
+
+@utility glow-cyan {
+  box-shadow: var(--shadow-glow);
+}
+@utility glow-violet {
+  box-shadow: var(--shadow-glow-violet);
+}
+
+@utility mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "zero", "ss02";
+}

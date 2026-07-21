@@ -1,0 +1,8 @@
+# EEF — AI Internship Roadmap Engine
+
+> An AI engine that generates dynamic, personalized engineering roadmaps for every Ezitech intern, with mentor and admin consoles.
+
+EEF (Ezitech Engineering Framework) analyzes each intern's current skills, GitHub activity, case-study completion, mentor reviews, coding speed and attendance to produce weekly and monthly goals, recommended case studies, missing skills, promotion readiness and an estimated graduation date. Roadmaps regenerate automatically whenever an intern completes a project, misses a deadline or learns a new skill.
+
+## Pages
+- [Home](/): Product overview, features, how it works, roles.
