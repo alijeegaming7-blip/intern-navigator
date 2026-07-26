@@ -119,8 +119,12 @@ function AuthPage() {
     <main className="min-h-[calc(100vh-4rem)] hero-bg grid place-items-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground glow-cyan">
-            <Cpu className="h-6 w-6" />
+          <div className="mx-auto h-16 w-16 mb-4">
+            <img 
+              src="/logo.svg" 
+              alt="EEF Logo" 
+              className="h-full w-full object-contain drop-shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+            />
           </div>
           <h1 className="mt-4 text-3xl font-bold tracking-tight">Access the console</h1>
           <p className="mt-1 text-sm text-muted-foreground">

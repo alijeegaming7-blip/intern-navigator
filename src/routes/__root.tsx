@@ -98,7 +98,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "alternate icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -151,13 +152,17 @@ function TopNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 backdrop-blur-xl bg-background/70">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground glow-cyan group-hover:scale-105 transition-transform">
-            <Cpu className="h-4 w-4" />
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="relative h-10 w-10 group-hover:scale-105 transition-transform">
+            <img 
+              src="/logo.svg" 
+              alt="EEF Logo" 
+              className="h-full w-full object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]"
+            />
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-tight">EEF</div>
-            <div className="mono text-[10px] text-muted-foreground -mt-0.5">ROADMAP_ENGINE</div>
+            <div className="text-lg font-bold tracking-tight gradient-text">EEF</div>
+            <div className="mono text-[10px] text-muted-foreground -mt-0.5 tracking-wider">ROADMAP_ENGINE</div>
           </div>
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">

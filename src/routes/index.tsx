@@ -34,9 +34,16 @@ function Landing() {
       <section className="hero-bg relative overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 pt-24 pb-32 lg:pt-32">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 mono text-[11px] text-primary tracking-widest">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              EEF · AI-019 · v1.0
+            <div className="inline-flex flex-col items-center gap-3 mb-6">
+              <img 
+                src="/logo.svg" 
+                alt="EEF Logo" 
+                className="h-20 w-20 object-contain drop-shadow-[0_0_16px_rgba(6,182,212,0.7)] animate-float"
+              />
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 mono text-[11px] text-primary tracking-widest">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                EEF · AI-019 · v1.0
+              </div>
             </div>
             <h1 className="mt-6 text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
               Every intern deserves <br />
