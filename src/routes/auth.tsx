@@ -71,7 +71,7 @@ function AuthPage() {
     if (!email.success) return toast.error(email.error.issues[0].message);
     if (!password.success) return toast.error(password.error.issues[0].message);
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.data,
       password: password.data,
       options: {
@@ -79,15 +79,26 @@ function AuthPage() {
         data: { full_name: name.data },
       },
     });
+
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
+
+    if (data?.session) {
+      setLoading(false);
+      toast.success("Account created — welcome aboard");
+      navigate({ to: "/dashboard", replace: true });
+      return;
+    }
+
     setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("Account created — signing you in");
-    // Attempt immediate sign-in (auto-confirm may or may not be on)
-    const { error: siErr } = await supabase.auth.signInWithPassword({
-      email: email.data,
-      password: password.data,
-    });
-    if (!siErr) navigate({ to: "/dashboard", replace: true });
+    if (data?.user) {
+      toast.success("Account created. Check your email to confirm before signing in.");
+      return;
+    }
+
+    toast.success("Account created. Please sign in to continue.");
   };
 
   const handleGoogle = async () => {
