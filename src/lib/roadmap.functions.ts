@@ -4,7 +4,7 @@ import { z } from "zod";
 
 /**
  * generateRoadmap — the core EEF AI engine.
- * Pulls every signal we have for the intern, asks Lovable AI to produce a
+ * Pulls every signal we have for the intern, asks our AI gateway to produce a
  * personalized roadmap as JSON, then upserts it into the roadmaps table.
  */
 export const generateRoadmap = createServerFn({ method: "POST" })

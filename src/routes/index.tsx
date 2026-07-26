@@ -215,7 +215,7 @@ const FEATURES = [
   {
     icon: Brain,
     title: "AI roadmap generation",
-    desc: "Weekly and monthly goals synthesized from every signal in your profile — powered by Lovable AI.",
+    desc: "Weekly and monthly goals synthesized from every signal in your profile — powered by advanced AI.",
   },
   {
     icon: GitBranch,
@@ -249,7 +249,7 @@ const STEPS = [
     title: "Ingest signals",
     desc: "Skills, GitHub, case studies, reviews, coding speed, attendance.",
   },
-  { title: "AI plan", desc: "Lovable AI produces goals, gaps, dependencies and readiness scores." },
+  { title: "AI plan", desc: "Our AI engine produces goals, gaps, dependencies and readiness scores." },
   {
     title: "Ship & review",
     desc: "Interns execute; mentors verify and rate; events feed back in.",
