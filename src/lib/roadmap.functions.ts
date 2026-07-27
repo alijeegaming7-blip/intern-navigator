@@ -108,12 +108,19 @@ export const generateRoadmap = createServerFn({ method: "POST" })
       regeneration_trigger: data.trigger ?? "manual",
     };
 
-    // 2. Call Google Gemini API directly
+    // 2. Call Google Gemini API directly (with fallback)
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
-
-    const model = "gemini-2.0-flash-exp";
-    const systemPrompt = `You are EEF, Ezitech Engineering Framework's roadmap engine.
+    
+    let parsed: Record<string, unknown>;
+    
+    if (!apiKey) {
+      // Fallback: Generate roadmap based on skills without AI
+      console.warn("GEMINI_API_KEY not configured - using fallback roadmap generation");
+      parsed = generateFallbackRoadmap(signalPayload);
+    } else {
+      // Use Gemini API
+      const model = "gemini-2.0-flash-exp";
+      const systemPrompt = `You are EEF, Ezitech Engineering Framework's roadmap engine.
 Given an intern's signals, produce a highly personalized engineering learning roadmap.
 Respond with STRICT JSON only, matching this schema:
 {
@@ -137,50 +144,64 @@ Rules:
 - Be specific and technical, no generic advice.
 - Levels: L1 Explorer, L2 Builder, L3 Engineer, L4 Senior Engineer, L5 Tech Lead.`;
 
-    const startedAt = Date.now();
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
+      const startedAt = Date.now();
+      try {
+        const resp = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
                 {
-                  text:
-                    systemPrompt +
-                    "\n\nGenerate a personalized roadmap for this intern. Signals:\n" +
-                    JSON.stringify(signalPayload, null, 2),
+                  parts: [
+                    {
+                      text:
+                        systemPrompt +
+                        "\n\nGenerate a personalized roadmap for this intern. Signals:\n" +
+                        JSON.stringify(signalPayload, null, 2),
+                    },
+                  ],
                 },
               ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8192,
-            responseMimeType: "application/json",
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 8192,
+                responseMimeType: "application/json",
+              },
+            }),
           },
-        }),
-      },
-    );
+        );
 
-    if (!resp.ok) {
-      const text = await resp.text();
-      if (resp.status === 429) throw new Error("AI rate limit reached — try again in a moment.");
-      throw new Error(`Gemini API error (${resp.status}): ${text.slice(0, 300)}`);
-    }
-
-    const aiJson = await resp.json();
-    const durationMs = Date.now() - startedAt;
-    const content = aiJson.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!content) throw new Error("AI returned no content");
-
-    let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(content);
-    } catch {
-      throw new Error("AI returned malformed JSON");
+        if (!resp.ok) {
+          const text = await resp.text();
+          if (resp.status === 429) {
+            console.warn("Gemini API rate limited - using fallback");
+            parsed = generateFallbackRoadmap(signalPayload);
+          } else {
+            console.error(`Gemini API error (${resp.status}): ${text.slice(0, 300)}`);
+            parsed = generateFallbackRoadmap(signalPayload);
+          }
+        } else {
+          const aiJson = await resp.json();
+          const durationMs = Date.now() - startedAt;
+          const content = aiJson.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!content) {
+            console.warn("AI returned no content - using fallback");
+            parsed = generateFallbackRoadmap(signalPayload);
+          } else {
+            try {
+              parsed = JSON.parse(content);
+            } catch {
+              console.warn("AI returned malformed JSON - using fallback");
+              parsed = generateFallbackRoadmap(signalPayload);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Gemini API call failed:", error);
+        parsed = generateFallbackRoadmap(signalPayload);
+      }
     }
 
     const weeks = Math.max(1, Math.min(52, Number(parsed.estimated_graduation_weeks ?? 12)));
@@ -264,3 +285,128 @@ function clampInt(v: unknown, min: number, max: number, fallback: number): numbe
   if (!Number.isFinite(n)) return fallback;
   return Math.max(min, Math.min(max, Math.round(n)));
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function generateFallbackRoadmap(signals: any): Record<string, unknown> {
+  const { profile, skills, available_case_studies, completed_case_studies } = signals;
+  
+  // Analyze skills
+  const strongSkills = skills.filter((s: { proficiency: number }) => s.proficiency >= 4).map((s: { name: string }) => s.name);
+  const weakSkills = skills.filter((s: { proficiency: number }) => s.proficiency <= 2).map((s: { name: string }) => s.name);
+  const missingSkills = ["Git", "Docker", "CI/CD", "Testing", "API Design"].filter(
+    (s) => !skills.some((sk: { name: string }) => sk.name.toLowerCase() === s.toLowerCase())
+  );
+  
+  // Determine current level and next target
+  const completedCount = completed_case_studies?.length || 0;
+  const avgProficiency = skills.length > 0 ? skills.reduce((sum: number, s: { proficiency: number }) => sum + s.proficiency, 0) / skills.length : 1;
+  
+  let currentLevel = "L1 Explorer";
+  let nextTarget = "L2 Builder";
+  let estimatedWeeks = 12;
+  
+  if (completedCount >= 10 && avgProficiency >= 4) {
+    currentLevel = "L4 Senior Engineer";
+    nextTarget = "L5 Tech Lead";
+    estimatedWeeks = 8;
+  } else if (completedCount >= 6 && avgProficiency >= 3.5) {
+    currentLevel = "L3 Engineer";
+    nextTarget = "L4 Senior Engineer";
+    estimatedWeeks = 10;
+  } else if (completedCount >= 3 && avgProficiency >= 2.5) {
+    currentLevel = "L2 Builder";
+    nextTarget = "L3 Engineer";
+    estimatedWeeks = 12;
+  } else if (completedCount >= 1) {
+    currentLevel = "L1 Explorer";
+    nextTarget = "L2 Builder";
+    estimatedWeeks = 16;
+  }
+  
+  // Generate weekly goals based on weak skills and target
+  const weeklyGoals = [];
+  for (let week = 1; week <= 4; week++) {
+    if (week === 1 && weakSkills.length > 0) {
+      weeklyGoals.push({
+        week,
+        title: `Strengthen ${weakSkills[0] || "Core Skills"}`,
+        description: `Focus on improving ${weakSkills.slice(0, 2).join(" and ")} through practice and case studies.`
+      });
+    } else if (week === 2 && missingSkills.length > 0) {
+      weeklyGoals.push({
+        week,
+        title: `Learn ${missingSkills[0]}`,
+        description: `Start learning ${missingSkills[0]} fundamentals and integrate it into your workflow.`
+      });
+    } else if (week === 3) {
+      weeklyGoals.push({
+        week,
+        title: "Build a Complete Project",
+        description: "Apply your skills to build an end-to-end project showcasing your capabilities."
+      });
+    } else {
+      weeklyGoals.push({
+        week,
+        title: "Code Review and Optimization",
+        description: "Review previous work, optimize code quality, and incorporate mentor feedback."
+      });
+    }
+  }
+  
+  // Generate monthly goals
+  const monthlyGoals = [
+    {
+      month: 1,
+      title: "Master Foundational Skills",
+      description: `Complete 3-4 case studies focusing on ${weakSkills.slice(0, 2).join(", ")} and core engineering principles.`
+    },
+    {
+      month: 2,
+      title: "Build Portfolio Projects",
+      description: "Create 2 substantial projects that demonstrate your technical abilities and problem-solving skills."
+    },
+    {
+      month: 3,
+      title: `Achieve ${nextTarget} Level`,
+      description: `Reach ${nextTarget} by mastering advanced concepts and consistently delivering quality work.`
+    }
+  ];
+  
+  // Recommend case studies based on skill gaps
+  const recommendedCaseStudies = available_case_studies
+    .filter((cs: { difficulty: string }) => {
+      if (currentLevel === "L1 Explorer") return cs.difficulty === "beginner";
+      if (currentLevel === "L2 Builder") return ["beginner", "intermediate"].includes(cs.difficulty);
+      return true;
+    })
+    .slice(0, 5)
+    .map((cs: { code: string; title: string; category: string }) => ({
+      code: cs.code,
+      title: cs.title,
+      reason: `Recommended to strengthen your ${cs.category} skills`
+    }));
+  
+  // Technology dependencies based on target role
+  const techDependencies = ["JavaScript/TypeScript", "React", "Node.js", "SQL/Database", "Git", "RESTful APIs"];
+  
+  // Calculate readiness scores
+  const promotionReadiness = Math.min(100, Math.round((completedCount * 10) + (avgProficiency * 15)));
+  const jobReadiness = Math.min(100, Math.round((completedCount * 8) + (avgProficiency * 12) + (strongSkills.length * 5)));
+  
+  return {
+    current_level: profile.current_level || currentLevel,
+    next_target: profile.target_role || nextTarget,
+    weekly_goals: weeklyGoals,
+    monthly_goals: monthlyGoals,
+    recommended_case_studies: recommendedCaseStudies,
+    missing_skills: missingSkills,
+    strong_skills: strongSkills,
+    weak_skills: weakSkills,
+    technology_dependencies: techDependencies,
+    promotion_readiness: promotionReadiness,
+    job_readiness: jobReadiness,
+    estimated_graduation_weeks: estimatedWeeks,
+    ai_summary: `Based on your current skills and ${completedCount} completed case studies, you're on track to reach ${nextTarget} in approximately ${estimatedWeeks} weeks. Focus on strengthening ${weakSkills.slice(0, 2).join(" and ")} while building your portfolio projects.`
+  };
+}
+
