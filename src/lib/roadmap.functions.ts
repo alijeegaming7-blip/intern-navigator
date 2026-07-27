@@ -108,11 +108,11 @@ export const generateRoadmap = createServerFn({ method: "POST" })
       regeneration_trigger: data.trigger ?? "manual",
     };
 
-    // 2. Call Lovable AI Gateway
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    // 2. Call Google Gemini API directly
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
 
-    const model = "google/gemini-2.5-flash";
+    const model = "gemini-2.0-flash-exp";
     const systemPrompt = `You are EEF, Ezitech Engineering Framework's roadmap engine.
 Given an intern's signals, produce a highly personalized engineering learning roadmap.
 Respond with STRICT JSON only, matching this schema:
@@ -138,35 +138,42 @@ Rules:
 - Levels: L1 Explorer, L2 Builder, L3 Engineer, L4 Senior Engineer, L5 Tech Lead.`;
 
     const startedAt = Date.now();
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content:
-              "Generate a personalized roadmap for this intern. Signals:\n" +
-              JSON.stringify(signalPayload, null, 2),
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text:
+                    systemPrompt +
+                    "\n\nGenerate a personalized roadmap for this intern. Signals:\n" +
+                    JSON.stringify(signalPayload, null, 2),
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 8192,
+            responseMimeType: "application/json",
           },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
+        }),
+      },
+    );
 
     if (!resp.ok) {
       const text = await resp.text();
       if (resp.status === 429) throw new Error("AI rate limit reached — try again in a moment.");
-      if (resp.status === 402)
-        throw new Error("AI credits exhausted — add credits in the workspace billing settings.");
-      throw new Error(`AI gateway error (${resp.status}): ${text.slice(0, 300)}`);
+      throw new Error(`Gemini API error (${resp.status}): ${text.slice(0, 300)}`);
     }
 
     const aiJson = await resp.json();
     const durationMs = Date.now() - startedAt;
-    const content = aiJson.choices?.[0]?.message?.content;
+    const content = aiJson.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!content) throw new Error("AI returned no content");
 
     let parsed: Record<string, unknown>;
