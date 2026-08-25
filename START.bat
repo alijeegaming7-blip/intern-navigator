@@ -94,74 +94,25 @@ goto MENU
 cls
 echo.
 echo  =====================================================
-echo    Creating Demo Users via Supabase Admin API
+echo    Create Demo Users — SQL Method
 echo  =====================================================
 echo.
-
-:: Read SERVICE_ROLE_KEY and SUPABASE_URL from .env
-set SUPA_URL=
-set SUPA_KEY=
-for /f "usebackq tokens=1,* delims==" %%A in (".env") do (
-    if "%%A"=="SUPABASE_URL"            set SUPA_URL=%%B
-    if "%%A"=="SUPABASE_SERVICE_ROLE_KEY" set SUPA_KEY=%%B
-)
-
-:: Strip surrounding quotes if any
-set SUPA_URL=%SUPA_URL:"=%
-set SUPA_KEY=%SUPA_KEY:"=%
-
-if "%SUPA_URL%"=="" (
-    echo  [ERROR] SUPABASE_URL not found in .env
-    pause & goto MENU
-)
-if "%SUPA_KEY%"=="" (
-    echo  [ERROR] SUPABASE_SERVICE_ROLE_KEY not found in .env
-    pause & goto MENU
-)
-
-echo  Supabase URL: %SUPA_URL%
+echo  Opening Supabase SQL Editor + SQL file...
 echo.
-
-:: Check curl
-curl --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo  [ERROR] curl not found. Using Node.js fallback...
-    call node scripts/create-demo-users.mjs
-    goto DEMO_DONE
-)
-
-echo  Creating intern@eef.demo ...
-curl -s -X POST "%SUPA_URL%/auth/v1/admin/users" ^
-  -H "apikey: %SUPA_KEY%" ^
-  -H "Authorization: Bearer %SUPA_KEY%" ^
-  -H "Content-Type: application/json" ^
-  -d "{\"email\":\"intern@eef.demo\",\"password\":\"Demo@1234\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"Alex Johnson\"}}" > nul 2>&1
-echo  [OK] intern@eef.demo created (or already exists)
-
-echo  Creating mentor@eef.demo ...
-curl -s -X POST "%SUPA_URL%/auth/v1/admin/users" ^
-  -H "apikey: %SUPA_KEY%" ^
-  -H "Authorization: Bearer %SUPA_KEY%" ^
-  -H "Content-Type: application/json" ^
-  -d "{\"email\":\"mentor@eef.demo\",\"password\":\"Demo@1234\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"Sarah Chen\"}}" > nul 2>&1
-echo  [OK] mentor@eef.demo created (or already exists)
-
-echo  Creating admin@eef.demo ...
-curl -s -X POST "%SUPA_URL%/auth/v1/admin/users" ^
-  -H "apikey: %SUPA_KEY%" ^
-  -H "Authorization: Bearer %SUPA_KEY%" ^
-  -H "Content-Type: application/json" ^
-  -d "{\"email\":\"admin@eef.demo\",\"password\":\"Demo@1234\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"EEF Administrator\"}}" > nul 2>&1
-echo  [OK] admin@eef.demo created (or already exists)
-
+echo  STEPS:
+echo  1. Supabase SQL Editor will open in your browser
+echo  2. Click "New query"
+echo  3. Copy-paste contents of: scripts\DEMO_USERS_SQL.sql
+echo  4. Click "Run"
+echo  5. Done!
 echo.
-echo  Now assigning roles and profiles via Node.js...
-call node scripts/create-demo-users.mjs
-
-:DEMO_DONE
+echo  Opening SQL file for you to copy...
+start "" "https://supabase.com/dashboard/project/yjzjbvthwrmhyyoxihca/sql/new"
+timeout /t 2 >nul
+start "" "scripts\DEMO_USERS_SQL.sql"
 echo.
 echo  =====================================================
-echo   DEMO USERS READY
+echo   DEMO CREDENTIALS (after running the SQL):
 echo  =====================================================
 echo   Intern  :  intern@eef.demo   /  Demo@1234
 echo   Mentor  :  mentor@eef.demo   /  Demo@1234
