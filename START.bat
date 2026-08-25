@@ -1,206 +1,240 @@
 @echo off
-title EEF — Intern Navigator Platform
+title EEF — Intern Navigator
 color 0B
 cls
 
 echo.
-echo  ===================================================
-echo    EEF — AI Internship Roadmap Engine
-echo    Ezitech Engineering Framework v1.0
-echo  ===================================================
+echo  =====================================================
+echo    EEF ^| AI Internship Roadmap Engine  v1.0
+echo    Ezitech Engineering Framework
+echo  =====================================================
 echo.
 
-:: ---- Check Node.js ----
+:: ---------- check Node ----------
 node --version >nul 2>&1
 if %errorlevel% neq 0 (
     color 0C
-    echo  [ERROR] Node.js is not installed!
+    echo  [ERROR] Node.js not found.
+    echo  Download from: https://nodejs.org
     echo.
-    echo  Please install Node.js from:
-    echo  https://nodejs.org/en/download
-    echo.
-    pause
-    exit /b 1
+    pause & exit /b 1
 )
-
 for /f "tokens=*" %%v in ('node --version') do set NODE_VER=%%v
-echo  [OK] Node.js %NODE_VER% detected
-echo.
+echo  [OK] Node.js %NODE_VER%
 
-:: ---- Check if .env exists ----
+:: ---------- check .env ----------
 if not exist ".env" (
-    color 0E
-    echo  [WARN] .env file not found!
-    echo  Copying .env.example to .env ...
     if exist ".env.example" (
         copy ".env.example" ".env" >nul
-        echo  [OK] .env created from example
-        echo.
-        echo  Please edit .env and add your Supabase credentials.
-        echo  Then run this file again.
-        echo.
-        pause
-        exit /b 1
-    ) else (
-        echo  [ERROR] .env.example not found either!
-        pause
-        exit /b 1
+        echo  [WARN] .env created from example — fill in your keys then re-run.
+        pause & exit /b 1
     )
+    echo  [ERROR] .env missing.
+    pause & exit /b 1
 )
-echo  [OK] .env file found
+echo  [OK] .env found
 
-:: ---- Install dependencies if needed ----
+:: ---------- install deps ----------
 if not exist "node_modules" (
     echo.
-    echo  [INFO] Installing dependencies (first time setup)...
-    echo  This may take 2-3 minutes...
-    echo.
-    call npm install
+    echo  [INFO] First-time setup — installing dependencies...
+    call npm install --silent
     if %errorlevel% neq 0 (
-        color 0C
-        echo.
-        echo  [ERROR] npm install failed!
-        echo  Check your internet connection and try again.
-        echo.
-        pause
-        exit /b 1
+        color 0C & echo  [ERROR] npm install failed. & pause & exit /b 1
     )
-    echo.
-    echo  [OK] Dependencies installed successfully!
+    echo  [OK] Dependencies installed
 )
 
-:: ---- Show menu ----
 :MENU
 cls
 echo.
-echo  ===================================================
-echo    EEF — Intern Navigator Platform
-echo  ===================================================
+echo  =====================================================
+echo    EEF ^| Intern Navigator Platform
+echo  =====================================================
 echo.
-echo    1.  Start Development Server  (localhost:8080)
-echo    2.  Create Demo Users         (for testing)
-echo    3.  Build for Production
-echo    4.  Open Live Site            (Cloudflare)
-echo    5.  Exit
+echo    [1]  Start Dev Server        ^(port 8080^)
+echo    [2]  Create Demo Users       ^(via Supabase API^)
+echo    [3]  Build for Production
+echo    [4]  Open Live Site
+echo    [5]  Show Demo Credentials
+echo    [6]  Exit
 echo.
-echo  ===================================================
+echo  =====================================================
 echo.
-set /p CHOICE="  Enter option (1-5): "
+set /p C="  Your choice: "
 
-if "%CHOICE%"=="1" goto START_DEV
-if "%CHOICE%"=="2" goto CREATE_DEMO
-if "%CHOICE%"=="3" goto BUILD_PROD
-if "%CHOICE%"=="4" goto OPEN_LIVE
-if "%CHOICE%"=="5" goto EXIT
-
-echo.
-echo  [ERROR] Invalid option. Please enter 1-5.
-echo.
-timeout /t 2 >nul
+if "%C%"=="1" goto DEV
+if "%C%"=="2" goto DEMO
+if "%C%"=="3" goto BUILD
+if "%C%"=="4" goto LIVE
+if "%C%"=="5" goto CREDS
+if "%C%"=="6" goto BYE
 goto MENU
 
-:: ---- Start Dev Server ----
-:START_DEV
+:: =====================================================
+:DEV
 cls
 echo.
-echo  ===================================================
-echo    Starting Development Server...
-echo  ===================================================
+echo  Starting dev server on http://localhost:8080
+echo  Press Ctrl+C to stop.
 echo.
-echo  [INFO] Server will be available at:
-echo         http://localhost:8080
+echo  ---- DEMO CREDENTIALS ----
+echo  Intern  : intern@eef.demo  /  Demo@1234
+echo  Mentor  : mentor@eef.demo  /  Demo@1234
+echo  Admin   : admin@eef.demo   /  Demo@1234
+echo  --------------------------
 echo.
-echo  Demo Login Credentials:
-echo  -----------------------
-echo  INTERN:
-echo    Email:    intern@eef.demo
-echo    Password: Demo@1234
-echo.
-echo  MENTOR:
-echo    Email:    mentor@eef.demo
-echo    Password: Demo@1234
-echo.
-echo  ADMIN:
-echo    Email:    admin@eef.demo
-echo    Password: Demo@1234
-echo.
-echo  Press Ctrl+C to stop the server
-echo  ===================================================
-echo.
-timeout /t 3 >nul
+timeout /t 2 >nul
 start "" "http://localhost:8080"
 call npm run dev
 goto MENU
 
-:: ---- Create Demo Users ----
-:CREATE_DEMO
+:: =====================================================
+:DEMO
 cls
 echo.
-echo  ===================================================
-echo    Creating Demo Users in Supabase...
-echo  ===================================================
+echo  =====================================================
+echo    Creating Demo Users via Supabase Admin API
+echo  =====================================================
 echo.
+
+:: Read SERVICE_ROLE_KEY and SUPABASE_URL from .env
+set SUPA_URL=
+set SUPA_KEY=
+for /f "usebackq tokens=1,* delims==" %%A in (".env") do (
+    if "%%A"=="SUPABASE_URL"            set SUPA_URL=%%B
+    if "%%A"=="SUPABASE_SERVICE_ROLE_KEY" set SUPA_KEY=%%B
+)
+
+:: Strip surrounding quotes if any
+set SUPA_URL=%SUPA_URL:"=%
+set SUPA_KEY=%SUPA_KEY:"=%
+
+if "%SUPA_URL%"=="" (
+    echo  [ERROR] SUPABASE_URL not found in .env
+    pause & goto MENU
+)
+if "%SUPA_KEY%"=="" (
+    echo  [ERROR] SUPABASE_SERVICE_ROLE_KEY not found in .env
+    pause & goto MENU
+)
+
+echo  Supabase URL: %SUPA_URL%
+echo.
+
+:: Check curl
+curl --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo  [ERROR] curl not found. Using Node.js fallback...
+    call node scripts/create-demo-users.mjs
+    goto DEMO_DONE
+)
+
+echo  Creating intern@eef.demo ...
+curl -s -X POST "%SUPA_URL%/auth/v1/admin/users" ^
+  -H "apikey: %SUPA_KEY%" ^
+  -H "Authorization: Bearer %SUPA_KEY%" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"email\":\"intern@eef.demo\",\"password\":\"Demo@1234\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"Alex Johnson\"}}" > nul 2>&1
+echo  [OK] intern@eef.demo created (or already exists)
+
+echo  Creating mentor@eef.demo ...
+curl -s -X POST "%SUPA_URL%/auth/v1/admin/users" ^
+  -H "apikey: %SUPA_KEY%" ^
+  -H "Authorization: Bearer %SUPA_KEY%" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"email\":\"mentor@eef.demo\",\"password\":\"Demo@1234\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"Sarah Chen\"}}" > nul 2>&1
+echo  [OK] mentor@eef.demo created (or already exists)
+
+echo  Creating admin@eef.demo ...
+curl -s -X POST "%SUPA_URL%/auth/v1/admin/users" ^
+  -H "apikey: %SUPA_KEY%" ^
+  -H "Authorization: Bearer %SUPA_KEY%" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"email\":\"admin@eef.demo\",\"password\":\"Demo@1234\",\"email_confirm\":true,\"user_metadata\":{\"full_name\":\"EEF Administrator\"}}" > nul 2>&1
+echo  [OK] admin@eef.demo created (or already exists)
+
+echo.
+echo  Now assigning roles and profiles via Node.js...
 call node scripts/create-demo-users.mjs
+
+:DEMO_DONE
 echo.
-echo  ===================================================
-echo  Press any key to return to menu...
-pause >nul
+echo  =====================================================
+echo   DEMO USERS READY
+echo  =====================================================
+echo   Intern  :  intern@eef.demo   /  Demo@1234
+echo   Mentor  :  mentor@eef.demo   /  Demo@1234
+echo   Admin   :  admin@eef.demo    /  Demo@1234
+echo  =====================================================
+echo.
+pause
 goto MENU
 
-:: ---- Build Production ----
-:BUILD_PROD
+:: =====================================================
+:BUILD
 cls
 echo.
-echo  ===================================================
-echo    Building for Production...
-echo  ===================================================
+echo  Building for production...
 echo.
 call npm run build
 if %errorlevel% neq 0 (
     color 0C
-    echo.
-    echo  [ERROR] Build failed! Check errors above.
-    echo.
+    echo  [ERROR] Build failed. See errors above.
     color 0B
 ) else (
     echo.
-    echo  [OK] Build successful! Output in .output folder
+    echo  [OK] Build complete — output in .output/
     echo.
-    echo  To deploy: push to GitHub (Cloudflare auto-deploys)
-    echo    git add -A
-    echo    git commit -m "update"
-    echo    git push origin main
-    echo.
+    echo  Deploy: git add -A ^&^& git commit -m "update" ^&^& git push
 )
-echo  Press any key to return to menu...
-pause >nul
-goto MENU
+echo.
+pause & goto MENU
 
-:: ---- Open Live Site ----
-:OPEN_LIVE
+:: =====================================================
+:LIVE
 cls
 echo.
-echo  ===================================================
-echo    Opening Live Site...
-echo  ===================================================
-echo.
-echo  Live URL: https://intern-navigator.pages.dev
-echo.
-echo  Demo Login Credentials:
-echo  -----------------------
-echo  INTERN:  intern@eef.demo   / Demo@1234
-echo  MENTOR:  mentor@eef.demo   / Demo@1234
-echo  ADMIN:   admin@eef.demo    / Demo@1234
-echo.
+echo  Opening live site...
 start "" "https://intern-navigator.pages.dev"
-timeout /t 3 >nul
+timeout /t 2 >nul
 goto MENU
 
-:: ---- Exit ----
-:EXIT
+:: =====================================================
+:CREDS
 cls
 echo.
-echo  Thanks for using EEF — Intern Navigator!
+echo  =====================================================
+echo    DEMO LOGIN CREDENTIALS
+echo  =====================================================
+echo.
+echo    INTERN ACCOUNT
+echo    Email    :  intern@eef.demo
+echo    Password :  Demo@1234
+echo    Access   :  Dashboard, Roadmap, Profile, Skills
+echo.
+echo    MENTOR ACCOUNT
+echo    Email    :  mentor@eef.demo
+echo    Password :  Demo@1234
+echo    Access   :  Dashboard, Reviews, Intern Management
+echo.
+echo    ADMIN ACCOUNT
+echo    Email    :  admin@eef.demo
+echo    Password :  Demo@1234
+echo    Access   :  Full platform access, User management
+echo.
+echo  =====================================================
+echo    Live Site   : https://intern-navigator.pages.dev
+echo    Local Dev   : http://localhost:8080
+echo  =====================================================
+echo.
+pause & goto MENU
+
+:: =====================================================
+:BYE
+cls
+echo.
+echo  EEF — Intern Navigator
 echo  Live: https://intern-navigator.pages.dev
 echo.
 timeout /t 2 >nul
